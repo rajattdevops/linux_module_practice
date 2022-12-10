@@ -1,0 +1,61 @@
+#!/bin/bash
+
+#update packages
+
+new_user=myapp
+
+apt update
+
+echo "please enter LOG_DIRECTORY location"
+read LOG_DIRECTORY
+
+if [ -d "$LOG_DIRECTORY" ]
+	then 
+		echo "directory already available"
+else
+	echo "Creating LOG_DIRECTORY"
+	mkdir -p $LOG_DIRECTORY
+fi
+
+#install node and npm
+apt install -y nodejs npm
+
+#Print node and npm version
+echo "node version is $(node -v)"
+
+echo "npm version is $(npm -v)"
+
+useradd $new_user -M
+chown $new_user -R $LOG_DIRECTORY
+
+#download project directory
+runuser -l $new_user -c "wget -c https://node-envvars-artifact.s3.eu-west-2.amazonaws.com/bootcamp-node-envvars-project-1.0.0.tgz"
+
+# unzip directory
+runuser -l $new_user -c "tar zxvf bootcamp-node-envvars-project-1.0.0.tgz"
+
+#set environment variable
+#runuser -l $new_user -c export APP_ENV=dev
+#runuser -l $new_user -c export DB_PWD=mysecret
+#runuser -l $new_user -c export DB_USER=myuser 
+#runuser -l $new_user -c export LOG_DIR=$LOG_DIRECTORY
+#runuser -l $new_user -c cd package
+
+#runuser -l $new_user -c npm install
+
+#runuser -l $new_user -c node server.js &
+runuser -l $new_user -c "
+	export APP_ENV=dev &&
+	export DB_PWD=mysecret &&
+	export DB_USER=myuser &&
+	export LOG_DIR=$LOG_DIRECTORY &&
+	cd package &&
+	npm install &&
+	node server.js &"
+
+#display running server.js
+ps aux | grep server.js | grep -v grep
+
+#display node app running on port 3000
+lsof -i | grep 3000
+
